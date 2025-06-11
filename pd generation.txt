@@ -1,0 +1,52 @@
+from flask import Flask, request, render_template, make_response
+from weasyprint import HTML
+import logging
+
+app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+
+@app.route('/generate-pdf', methods=['POST'])
+def generate_pdf():
+    data = request.json or {}
+    # Basic input validation
+    if not data.get('title'):
+        return {'error': 'Missing title'}, 400
+
+    try:
+        html = render_template('template.html', **data)
+        pdf = HTML(string=html).write_pdf()
+    except Exception:
+        logging.exception("PDF generation failed")
+        return {'error': 'PDF generation error'}, 500
+
+    response = make_response(pdf)
+    response.headers.update({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': f'attachment; filename="{data["title"]}.pdf"'
+    })
+    return response
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf‑8"><style>body{font-family:sans-serif;}</style></head>
+<body>
+  <h1>{{ title }}</h1>
+  {% if subt %}
+    <h3>{{ subt }}</h3>
+  {% endif %}
+  <p>Generated on {{ now }}</p>
+</body>
+</html>
+# tasks.py
+:contentReference[oaicite:10]{index=10}
+:contentReference[oaicite:11]{index=11}
+
+:contentReference[oaicite:12]{index=12}
+
+@celery.task
+:contentReference[oaicite:13]{index=13}
+    :contentReference[oaicite:14]{index=14}
+@app.route('/queue-pdf', methods=['POST'])
+def queue_pdf():
+    html = render_template('template.html', **request.json)
+    task = gen_pdf_task.delay(html)
+    return {'task_id': task.id}, 202
